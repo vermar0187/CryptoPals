@@ -1,4 +1,4 @@
-package main
+package cryptopals
 
 import (
 	"crypto/aes"
@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"strings"
 	"unicode"
 )
@@ -194,6 +193,19 @@ func aes128Decrypt(cipherText []byte, cipherKey string) (string, error) {
 	return string(result), nil
 }
 
+func aes128Encrypt(plainText []byte, cipherKey []byte) (string, error) {
+	block, err := aes.NewCipher(cipherKey)
+	if err != nil {
+		return "", err
+	}
+
+	result := make([]byte, len(plainText))
+	for i := 0; i < len(plainText); i += aes.BlockSize {
+		block.Encrypt(result[i:i+aes.BlockSize], plainText[i:i+aes.BlockSize])
+	}
+	return string(result), nil
+}
+
 func countDuplicateBytes(byteArr []byte) int {
 	var count int
 
@@ -211,20 +223,20 @@ func countDuplicateBytes(byteArr []byte) int {
 	return count
 }
 
-func exerciseOne(hexStr string) (string, error) {
+func ExerciseOne(hexStr string) (string, error) {
 	return hexToBase64(hexStr)
 }
 
-func exerciseTwo(hexOne string, hexTwo string) (string, error) {
+func ExerciseTwo(hexOne string, hexTwo string) (string, error) {
 	return fixedXOR(hexOne, hexTwo)
 }
 
-func exerciseThree(hexStr string) (string, error) {
+func ExerciseThree(hexStr string) (string, error) {
 	decipheredText, _, _, err := decipherSingleByteXor(hexStr)
 	return decipheredText, err
 }
 
-func exerciseFour(hexStr string) (string, error) {
+func ExerciseFour(hexStr string) (string, error) {
 	var minFq float64
 	var result string
 	for _, line := range strings.Split(hexStr, "\n") {
@@ -234,10 +246,10 @@ func exerciseFour(hexStr string) (string, error) {
 			result = text
 		}
 	}
-	return strings.TrimSuffix(result, "\n"), nil
+	return result, nil
 }
 
-func exerciseFive(text string, encryptionKey string) (string, error) {
+func ExerciseFive(text string, encryptionKey string) (string, error) {
 	result, err := encryptRepeatedKey(text, encryptionKey)
 	if err != nil {
 		return "", err
@@ -245,7 +257,7 @@ func exerciseFive(text string, encryptionKey string) (string, error) {
 	return hex.EncodeToString(result), nil
 }
 
-func exerciseSix(base64Str string) (string, error) {
+func ExerciseSix(base64Str string) (string, error) {
 	decodedBytes, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("invalid base64 string: %s", base64Str))
@@ -275,7 +287,7 @@ func exerciseSix(base64Str string) (string, error) {
 	return string(result), nil
 }
 
-func exerciseSeven(base64Str string, cipherKey string) (string, error) {
+func ExerciseSeven(base64Str string, cipherKey string) (string, error) {
 	decodedBytes, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("invalid base64 string: %s", base64Str))
@@ -283,7 +295,7 @@ func exerciseSeven(base64Str string, cipherKey string) (string, error) {
 	return aes128Decrypt(decodedBytes, cipherKey)
 }
 
-func exerciseEight(hexLines string) (string, error) {
+func ExerciseEight(hexLines string) (string, error) {
 	var minCount int
 	var result string
 
@@ -299,72 +311,5 @@ func exerciseEight(hexLines string) (string, error) {
 		}
 	}
 
-	fmt.Println([]byte(result))
 	return result, nil
-}
-
-func printHelper(exerciseNum int, result string, err error) {
-	if err == nil {
-		fmt.Printf("Exercise %d: %s\n", exerciseNum, result)
-	} else {
-		fmt.Printf("Exercise %d errored: %s\n", exerciseNum, err.Error())
-	}
-}
-
-func main() {
-	// https://cryptopals.com/sets/1/challenges/1
-	resultOne, err := exerciseOne("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")
-	printHelper(1, resultOne, err)
-
-	// https://cryptopals.com/sets/1/challenges/2
-	resultTwo, err := exerciseTwo("1c0111001f010100061a024b53535009181c", "686974207468652062756c6c277320657965")
-	printHelper(2, resultTwo, err)
-
-	// https://cryptopals.com/sets/1/challenges/3
-	resultThree, err := exerciseThree("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
-	printHelper(3, resultThree, err)
-
-	// https://cryptopals.com/sets/1/challenges/4
-	dataFileFour, err := os.ReadFile("resources/set1_4.txt")
-	var resultFour string
-	if err != nil {
-		printHelper(4, resultFour, err)
-	} else {
-		resultFour, err = exerciseFour(string(dataFileFour))
-		printHelper(4, resultFour, err)
-	}
-
-	// https://cryptopals.com/sets/1/challenges/5
-	resultFive, err := exerciseFive("Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", "ICE")
-	printHelper(5, resultFive, err)
-
-	// https://cryptopals.com/sets/1/challenges/6
-	dataFileSix, err := os.ReadFile("resources/set1_6.txt")
-	var resultSix string
-	if err != nil {
-		printHelper(6, resultSix, err)
-	} else {
-		resultSix, err = exerciseSix(string(dataFileSix))
-		printHelper(6, resultSix, err)
-	}
-
-	// https://cryptopals.com/sets/1/challenges/7
-	dataFileSeven, err := os.ReadFile("resources/set1_7.txt")
-	var resultSeven string
-	if err != nil {
-		printHelper(7, resultSeven, err)
-	} else {
-		resultSeven, err = exerciseSeven(string(dataFileSeven), "YELLOW SUBMARINE")
-		printHelper(7, resultSeven, err)
-	}
-
-	// https://cryptopals.com/sets/1/challenges/8
-	dataFileEight, err := os.ReadFile("resources/set1_8.txt")
-	var resultEight string
-	if err != nil {
-		printHelper(8, resultEight, err)
-	} else {
-		resultEight, err = exerciseEight(string(dataFileEight))
-		printHelper(8, resultEight, err)
-	}
 }
